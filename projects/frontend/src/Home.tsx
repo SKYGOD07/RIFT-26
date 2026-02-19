@@ -361,18 +361,28 @@ const Home: React.FC<HomeProps> = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu"
             >
-              <span /><span /><span />
+              <div className="bar-group">
+                <span /><span /><span />
+              </div>
             </button>
           </div>
         </nav>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu — iPhone Glass */}
         <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
-          <a href="#hero" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMobileMenuOpen(false) }}>Home</a>
-          <a href="#features" onClick={() => { scrollToFeatures(); setMobileMenuOpen(false) }}>Features</a>
-          <button onClick={() => { toggleWalletModal(); setMobileMenuOpen(false) }}>
-            {activeAddress ? 'Wallet Connected' : 'Connect Wallet'}
-          </button>
+          <div className="mobile-menu-card">
+            <a href="#hero" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMobileMenuOpen(false) }}>
+              🏠 Home
+            </a>
+            <div className="mobile-menu-divider" />
+            <a href="#features" onClick={() => { scrollToFeatures(); setMobileMenuOpen(false) }}>
+              ✨ Features
+            </a>
+            <div className="mobile-menu-divider" />
+            <button className="mobile-wallet-btn" onClick={() => { toggleWalletModal(); setMobileMenuOpen(false) }}>
+              {activeAddress ? `🔗 ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}` : '🔐 Connect Wallet'}
+            </button>
+          </div>
         </div>
 
         {/* HERO */}

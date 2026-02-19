@@ -237,26 +237,85 @@ html {
   box-shadow: 0 4px 20px rgba(74, 158, 255, 0.3);
 }
 
-/* ==== HAMBURGER ==== */
+/* ==== HAMBURGER — iPhone Glass Pill ==== */
 .hamburger {
   display: none;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
-  padding: 4px;
   z-index: 200;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 0;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.hamburger::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.hamburger:active {
+  transform: scale(0.95);
+}
+
+.hamburger .bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 20px;
 }
 
 .hamburger span {
   display: block;
-  width: 24px;
+  width: 20px;
   height: 2px;
   background: var(--text-primary);
   border-radius: 2px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
   transform-origin: center;
+}
+
+.hamburger span:nth-child(1) {
+  width: 20px;
+}
+
+.hamburger span:nth-child(2) {
+  width: 14px;
+  transition-delay: 0.05s;
+}
+
+.hamburger span:nth-child(3) {
+  width: 20px;
+  transition-delay: 0.1s;
+}
+
+.hamburger.active {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.25);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.hamburger.active span {
+  width: 20px;
 }
 
 .hamburger.active span:nth-child(1) {
@@ -272,41 +331,168 @@ html {
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
+/* Light theme adjustments */
+:root[data-theme="light"] .hamburger {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .hamburger::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, transparent 50%);
+}
+
+:root[data-theme="light"] .hamburger:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="light"] .hamburger.active {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+/* ==== MOBILE MENU — iPhone Dynamic Island Glass ==== */
 .mobile-menu {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 99;
-  background: var(--overlay-bg);
-  backdrop-filter: blur(30px);
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .mobile-menu.open {
   display: flex;
+  animation: glass-menu-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.mobile-menu a,
-.mobile-menu button {
+@keyframes glass-menu-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Glass card container for nav links */
+.mobile-menu-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 12px;
+  width: min(320px, 85vw);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-menu-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.mobile-menu-card a,
+.mobile-menu-card button {
   color: var(--text-primary);
   text-decoration: none;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  transition: color 0.3s ease;
-  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.25s ease;
+  background: transparent;
   border: none;
   cursor: pointer;
+  padding: 16px 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: none;
+  position: relative;
 }
 
-.mobile-menu a:hover,
-.mobile-menu button:hover {
+.mobile-menu-card a:hover,
+.mobile-menu-card button:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: var(--accent-cyan);
+}
+
+.mobile-menu-card a:active,
+.mobile-menu-card button:active {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(0.98);
+}
+
+/* Divider between items */
+.mobile-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 12px;
+}
+
+/* Wallet CTA in mobile menu */
+.mobile-menu-card .mobile-wallet-btn {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  color: #000;
+  font-weight: 600;
+  border-radius: 16px;
+  justify-content: center;
+  margin-top: 4px;
+  border: none;
+}
+
+.mobile-menu-card .mobile-wallet-btn:hover {
+  color: #000;
+  box-shadow: 0 4px 20px rgba(74, 158, 255, 0.3);
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+}
+
+/* Light theme mobile menu */
+:root[data-theme="light"] .mobile-menu {
+  background: rgba(240, 242, 245, 0.85);
+}
+
+:root[data-theme="light"] .mobile-menu-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root[data-theme="light"] .mobile-menu-card::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+}
+
+:root[data-theme="light"] .mobile-menu-card a:hover,
+:root[data-theme="light"] .mobile-menu-card button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="light"] .mobile-menu-divider {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 @media (max-width: 768px) {
