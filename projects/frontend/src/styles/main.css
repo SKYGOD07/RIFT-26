@@ -578,10 +578,11 @@ html {
 
 .hero-subtitle {
   font-size: clamp(1rem, 2vw, 1.2rem);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   max-width: 500px;
   line-height: 1.7;
-  font-weight: 300;
+  font-weight: 400;
+  text-shadow: 0 0 15px rgba(0, 212, 255, 0.25);
 }
 
 .hero-actions {
@@ -1019,4 +1020,49 @@ html {
     filter: hue-rotate(-20deg);
     opacity: 0.8;
   }
+}
+
+/* ===== FEATURE TEXT GLOW (Readability Fix) ===== */
+.feature-title {
+  color: var(--text-primary);
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}
+
+.feature-desc {
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.explanation-heading {
+  color: var(--text-primary);
+  text-shadow: 0 0 15px rgba(0, 212, 255, 0.35);
+}
+
+.explanation-text {
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.explanation-number {
+  text-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+}
+
+/* Light theme overrides to remove glow */
+:root[data-theme="light"] .hero-subtitle,
+:root[data-theme="light"] .feature-title,
+:root[data-theme="light"] .feature-desc,
+:root[data-theme="light"] .explanation-heading,
+:root[data-theme="light"] .explanation-text,
+:root[data-theme="light"] .explanation-number {
+  text-shadow: none;
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .feature-title,
+:root[data-theme="light"] .explanation-heading {
+  color: var(--text-primary);
 }
