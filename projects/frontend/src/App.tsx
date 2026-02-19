@@ -16,8 +16,6 @@ if (import.meta.env.VITE_ALGOD_NETWORK === 'localnet' && isLocalhost) {
         baseServer: kmdConfig.server,
         token: String(kmdConfig.token),
         port: String(kmdConfig.port),
-        wallet: kmdConfig.wallet,
-        password: kmdConfig.password,
       },
     },
   ]
