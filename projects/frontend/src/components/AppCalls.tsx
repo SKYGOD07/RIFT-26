@@ -25,8 +25,8 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
     algodConfig,
     indexerConfig,
   })
-  
-  
+
+
   algorand.setDefaultSigner(TransactionSigner)
 
   // Separate function to fetch current count
@@ -38,8 +38,8 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
         defaultSigner: TransactionSigner,
       })
       const state = await counterClient.appClient.getGlobalState()
-      return typeof state.count.value === 'bigint' 
-        ? Number(state.count.value) 
+      return typeof state.count.value === 'bigint'
+        ? Number(state.count.value)
         : parseInt(state.count.value, 10)
     } catch (e) {
       enqueueSnackbar(`Error fetching count: ${(e as Error).message}`, { variant: 'error' })
@@ -75,17 +75,17 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
   //   }
   // }
 
-  // Auto-load current count for the fixed app ID
+  // Auto-load current count for the fixed app ID (only when wallet is connected)
   useEffect(() => {
     const load = async () => {
-      if (appId) {
+      if (appId && activeAddress) {
         const count = await fetchCount(appId)
         setCurrentCount(count)
       }
     }
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appId, TransactionSigner])
+  }, [appId, TransactionSigner, activeAddress])
 
   const incrementCounter = async () => {
     if (!appId) {
@@ -102,14 +102,14 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
       })
 
       // Increment the counter
-      await counterClient.send.incrCounter({args: [], sender: activeAddress ?? undefined})
-      
+      await counterClient.send.incrCounter({ args: [], sender: activeAddress ?? undefined })
+
       // Fetch and set updated count
       const count = await fetchCount(appId)
       setCurrentCount(count)
-      
-      enqueueSnackbar(`Counter incremented! New count: ${count}`, { 
-        variant: 'success' 
+
+      enqueueSnackbar(`Counter incremented! New count: ${count}`, {
+        variant: 'success'
       })
     } catch (e) {
       enqueueSnackbar(`Error incrementing counter: ${(e as Error).message}`, { variant: 'error' })
@@ -123,7 +123,7 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
       <form method="dialog" className="modal-box">
         <h3 className="font-bold text-lg">Counter Contract</h3>
         <br />
-        
+
         <div className="flex flex-col gap-4">
           {appId && (
             <div className="alert alert-info flex flex-col gap-1">
@@ -131,7 +131,7 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
               <span>Current Count: {currentCount}</span>
             </div>
           )}
-          
+
           {/*
           <div className="flex flex-col gap-2">
             <button 
@@ -146,9 +146,9 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
           
           <div className="divider">OR</div>
           */}
-          
+
           <div className="flex flex-col gap-2">
-            <button 
+            <button
               className={`btn btn-secondary ${loading ? 'loading' : ''}`}
               onClick={incrementCounter}
               disabled={loading || !appId}
@@ -157,10 +157,10 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
             </button>
             <p className="text-sm">Requires deployed contract</p>
           </div>
-          
+
           <div className="modal-action">
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               onClick={() => setModalState(false)}
               disabled={loading}
             >
