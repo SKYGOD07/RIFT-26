@@ -4,7 +4,10 @@ import Home from './Home'
 import { getAlgodConfigFromViteEnvironment, getKmdConfigFromViteEnvironment } from './utils/network/getAlgoClientConfigs'
 
 let supportedWallets: SupportedWallet[]
-if (import.meta.env.VITE_ALGOD_NETWORK === 'localnet') {
+// Detect if we are really on localhost
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+if (import.meta.env.VITE_ALGOD_NETWORK === 'localnet' && isLocalhost) {
   const kmdConfig = getKmdConfigFromViteEnvironment()
   supportedWallets = [
     {
@@ -13,6 +16,8 @@ if (import.meta.env.VITE_ALGOD_NETWORK === 'localnet') {
         baseServer: kmdConfig.server,
         token: String(kmdConfig.token),
         port: String(kmdConfig.port),
+        wallet: kmdConfig.wallet,
+        password: kmdConfig.password,
       },
     },
   ]
