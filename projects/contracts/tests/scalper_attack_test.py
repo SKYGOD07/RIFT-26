@@ -1,9 +1,11 @@
 import pytest
+import algokit_utils
 from algokit_utils import (
     AlgorandClient,
     OnSchemaBreak,
     OnUpdate,
     PaymentTxnParams,
+    TransactionParameters,
 )
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 from smart_contracts.artifacts.ticketing.event_ticketing_client import (
