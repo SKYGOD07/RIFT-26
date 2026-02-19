@@ -3,6 +3,7 @@ import { useWallet } from '@txnlab/use-wallet-react'
 import { useSnackbar } from 'notistack'
 import { useMemo, useState } from 'react'
 import { getAlgodConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import { handleTxnError } from '../utils/handleTxnError'
 
 interface AssetOptInProps {
   openModal: boolean
@@ -28,11 +29,12 @@ const AssetOptIn = ({ openModal, closeModal }: AssetOptInProps) => {
     if (id <= 0n) return enqueueSnackbar('Enter a valid ASA ID', { variant: 'error' })
     setLoading(true)
     try {
+      enqueueSnackbar('Please check your phone to sign the transaction!', { variant: 'info', autoHideDuration: 6000 })
       await algorand.send.assetOptIn({ sender: activeAddress, assetId: id })
-      enqueueSnackbar('Opt-in successful', { variant: 'success' })
+      enqueueSnackbar('✅ Opt-in successful!', { variant: 'success' })
       closeModal()
     } catch (e) {
-      enqueueSnackbar((e as Error).message, { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setLoading(false)
     }
@@ -46,7 +48,9 @@ const AssetOptIn = ({ openModal, closeModal }: AssetOptInProps) => {
           <input className="input input-bordered" placeholder="ASA ID" value={asaId} onChange={(e) => setAsaId(e.target.value)} />
         </div>
         <div className="modal-action">
-          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onOptIn} disabled={loading}>Opt-In</button>
+          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onOptIn} disabled={loading}>
+            {loading ? 'Check Phone...' : 'Opt-In'}
+          </button>
           <button className="btn" onClick={closeModal} disabled={loading}>Close</button>
         </div>
       </form>

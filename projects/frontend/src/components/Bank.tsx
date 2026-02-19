@@ -5,6 +5,7 @@ import algosdk, { getApplicationAddress, makePaymentTxnWithSuggestedParamsFromOb
 import { AlgorandClient, microAlgos } from '@algorandfoundation/algokit-utils'
 import { BankClient, BankFactory } from '../contracts/Bank'
 import { getAlgodConfigFromViteEnvironment, getIndexerConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import { handleTxnError } from '../utils/handleTxnError'
 
 interface BankProps {
   openModal: boolean
@@ -48,24 +49,24 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
       const idx = algorand.client.indexer
       const appAddr = String(getApplicationAddress(appId))
       const allTransactions: Statement[] = []
-      
+
       console.log('Searching for app transactions with app ID:', appId)
-      
+
       // Search for application call transactions from user
       const appTxRes = await idx
         .searchForTransactions()
         .address(activeAddress)
         .txType('appl')
         .do()
-      
+
       console.log('App call transactions found:', appTxRes.transactions?.length || 0)
-      
+
       // Process application call transactions (deposits/withdrawals)
       const appTransactions = (appTxRes.transactions || [])
         .filter((t: any) => {
           // Filter for transactions calling our specific app
-          const isOurApp = t.applicationTransaction && 
-                          Number(t.applicationTransaction.applicationId) === Number(appId)
+          const isOurApp = t.applicationTransaction &&
+            Number(t.applicationTransaction.applicationId) === Number(appId)
           console.log('Checking transaction:', t.id, {
             hasAppTxn: !!t.applicationTransaction,
             appId: t.applicationTransaction?.applicationId,
@@ -77,59 +78,59 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
           return isOurApp
         })
         .map((t: any) => {
-        // Determine transaction type from logs or method name
-        let amount = 1 // Default amount
-        let type: 'deposit' | 'withdrawal' = 'deposit'
-        
-        // Check logs for method name
-        if (t.logs && t.logs.length > 0) {
-          const logStr = t.logs.join(' ')
-          if (logStr.includes('withdraw') || logStr.includes('Withdraw')) {
-            type = 'withdrawal'
-          }
-        }
-        
-        // Check inner transactions for actual payment amounts
-        if (t.innerTxns && t.innerTxns.length > 0) {
-          console.log('Inner transactions for', t.id, ':', t.innerTxns)
-          for (const innerTxn of t.innerTxns) {
-            if (innerTxn.paymentTransaction) {
-              amount = Number(innerTxn.paymentTransaction.amount) / 1000000
-              // If there's an inner payment from app to user, it's definitely a withdrawal
-              if (innerTxn.sender === appAddr && innerTxn.paymentTransaction.receiver === activeAddress) {
-                type = 'withdrawal'
-              }
-              console.log('Found payment in inner txn:', { amount, type, sender: innerTxn.sender, receiver: innerTxn.paymentTransaction.receiver })
-              break
+          // Determine transaction type from logs or method name
+          let amount = 1 // Default amount
+          let type: 'deposit' | 'withdrawal' = 'deposit'
+
+          // Check logs for method name
+          if (t.logs && t.logs.length > 0) {
+            const logStr = t.logs.join(' ')
+            if (logStr.includes('withdraw') || logStr.includes('Withdraw')) {
+              type = 'withdrawal'
             }
           }
-        }
-        
-        // If no inner transactions found but it's a withdraw call, still show it
-        console.log('Transaction', t.id, 'type:', type, 'amount:', amount)
-        
-        return {
-          id: t.id,
-          round: Number(t.confirmedRound || t['confirmed-round']),
-          amount,
-          type,
-          sender: t.sender,
-          receiver: appAddr,
-          timestamp: Number(t.roundTime || t['round-time']),
-        }
-      })
-      
+
+          // Check inner transactions for actual payment amounts
+          if (t.innerTxns && t.innerTxns.length > 0) {
+            console.log('Inner transactions for', t.id, ':', t.innerTxns)
+            for (const innerTxn of t.innerTxns) {
+              if (innerTxn.paymentTransaction) {
+                amount = Number(innerTxn.paymentTransaction.amount) / 1000000
+                // If there's an inner payment from app to user, it's definitely a withdrawal
+                if (innerTxn.sender === appAddr && innerTxn.paymentTransaction.receiver === activeAddress) {
+                  type = 'withdrawal'
+                }
+                console.log('Found payment in inner txn:', { amount, type, sender: innerTxn.sender, receiver: innerTxn.paymentTransaction.receiver })
+                break
+              }
+            }
+          }
+
+          // If no inner transactions found but it's a withdraw call, still show it
+          console.log('Transaction', t.id, 'type:', type, 'amount:', amount)
+
+          return {
+            id: t.id,
+            round: Number(t.confirmedRound || t['confirmed-round']),
+            amount,
+            type,
+            sender: t.sender,
+            receiver: appAddr,
+            timestamp: Number(t.roundTime || t['round-time']),
+          }
+        })
+
       allTransactions.push(...appTransactions)
-      
+
       // Also search for direct payment transactions to/from app address
       const payTxRes = await idx
         .searchForTransactions()
         .address(appAddr)
         .txType('pay')
         .do()
-      
+
       console.log('Payment transactions found:', payTxRes.transactions?.length || 0)
-      
+
       const paymentTransactions = (payTxRes.transactions || [])
         .filter((t: any) => {
           // Only include withdrawals (app to user) and exclude deposits (user to app) 
@@ -145,9 +146,9 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
           receiver: t.paymentTransaction.receiver,
           timestamp: Number(t.roundTime || t['round-time']),
         }))
-      
+
       allTransactions.push(...paymentTransactions)
-      
+
       console.log('Total relevant transactions:', allTransactions.length)
       setStatements(allTransactions.sort((a, b) => b.round - a.round))
     } catch (e) {
@@ -198,10 +199,10 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
 
       const sp = await algorand.client.algod.getTransactionParams().do()
       const appAddr = getApplicationAddress(appId)
-      
+
       if (!algosdk.isValidAddress(activeAddress)) throw new Error('Invalid wallet address')
       if (!algosdk.isValidAddress(String(appAddr))) throw new Error('Invalid app address; check App ID')
-      
+
       const payTxn = makePaymentTxnWithSuggestedParamsFromObject({
         sender: activeAddress,
         receiver: appAddr,
@@ -209,20 +210,20 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
         suggestedParams: sp,
       })
 
-      const client = new BankClient({ 
-        appId: BigInt(appId), 
-        algorand, 
-        defaultSigner: transactionSigner 
+      const client = new BankClient({
+        appId: BigInt(appId),
+        algorand,
+        defaultSigner: transactionSigner
       })
-      
-      const res = await client.send.deposit({ 
-        args: { 
-          memo: memo || '', 
-          payTxn: { txn: payTxn, signer: transactionSigner } 
-        }, 
-        sender: activeAddress 
+
+      const res = await client.send.deposit({
+        args: {
+          memo: memo || '',
+          payTxn: { txn: payTxn, signer: transactionSigner }
+        },
+        sender: activeAddress
       })
-      
+
       const confirmedRound = (res.confirmation as any)?.['confirmed-round']
       enqueueSnackbar(`Deposited successfully in round ${confirmedRound}`, { variant: 'success' })
       setDepositAmount('')
@@ -230,7 +231,7 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
       void refreshStatements()
       void refreshDepositors()
     } catch (e) {
-      enqueueSnackbar(`Deposit failed: ${(e as Error).message}`, { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setLoading(false)
     }
@@ -246,25 +247,25 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
       const amountMicroAlgos = Math.round(amount * 1000000) // Convert to microAlgos
       setLoading(true)
 
-      const client = new BankClient({ 
-        appId: BigInt(appId), 
-        algorand, 
-        defaultSigner: transactionSigner 
+      const client = new BankClient({
+        appId: BigInt(appId),
+        algorand,
+        defaultSigner: transactionSigner
       })
-      
-      const res = await client.send.withdraw({ 
-        args: { amount: amountMicroAlgos }, 
+
+      const res = await client.send.withdraw({
+        args: { amount: amountMicroAlgos },
         sender: activeAddress,
         extraFee: microAlgos(2000)
       })
-      
+
       const confirmedRound = (res.confirmation as any)?.['confirmed-round']
       enqueueSnackbar(`Withdraw executed in round ${confirmedRound}`, { variant: 'success' })
       setWithdrawAmount('')
       void refreshStatements()
       void refreshDepositors()
     } catch (e) {
-      enqueueSnackbar(`Withdraw failed: ${(e as Error).message}`, { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setLoading(false)
     }
@@ -280,7 +281,7 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
       setAppId(newId)
       enqueueSnackbar(`Bank deployed. App ID: ${newId}`, { variant: 'success' })
     } catch (e) {
-      enqueueSnackbar(`Deploy failed: ${(e as Error).message}`, { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setDeploying(false)
     }
@@ -329,7 +330,7 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
                     <span className={s.type === 'deposit' ? 'text-emerald-600' : 'text-amber-700'}>{s.type}</span>
                     <span>round {s.round}</span>
                     {/* <span>{s.amount} Algos</span> */}
-                    <a 
+                    <a
                       href={`https://lora.algokit.io/testnet/transaction/${s.id}`}
                       target="_blank"
                       rel="noopener noreferrer"

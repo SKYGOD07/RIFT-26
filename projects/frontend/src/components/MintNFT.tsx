@@ -3,6 +3,7 @@ import { useWallet } from '@txnlab/use-wallet-react'
 import { useSnackbar } from 'notistack'
 import { useMemo, useState } from 'react'
 import { getAlgodConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import { handleTxnError } from '../utils/handleTxnError'
 
 interface MintNFTProps {
   openModal: boolean
@@ -64,20 +65,7 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
       enqueueSnackbar(`🎉 NFT minted! ASA ID: ${result.assetId}`, { variant: 'success', autoHideDuration: 10000 })
       closeModal()
     } catch (e) {
-      const msg = (e as Error).message || ''
-      if (msg.toLowerCase().includes('network mismatch') || msg.includes('4100')) {
-        enqueueSnackbar('⚠️ Network Mismatch! Open Pera Wallet → Settings → Developer Settings → Node Settings → Select "Testnet"', {
-          variant: 'error',
-          autoHideDuration: 10000,
-        })
-      } else if (msg.toLowerCase().includes('overspend')) {
-        enqueueSnackbar('💸 Insufficient funds! Get free Testnet ALGO from the faucet first.', {
-          variant: 'error',
-          autoHideDuration: 8000,
-        })
-      } else {
-        enqueueSnackbar(msg, { variant: 'error' })
-      }
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setLoading(false)
     }

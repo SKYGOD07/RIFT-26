@@ -3,6 +3,7 @@ import { useWallet } from '@txnlab/use-wallet-react'
 import { useSnackbar } from 'notistack'
 import { useState } from 'react'
 import { getAlgodConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import { handleTxnError } from '../utils/handleTxnError'
 
 interface TransactInterface {
   openModal: boolean
@@ -29,17 +30,17 @@ const Transact = ({ openModal, setModalState }: TransactInterface) => {
     }
 
     try {
-      enqueueSnackbar('Sending transaction...', { variant: 'info' })
+      enqueueSnackbar('Please check your phone to sign the transaction!', { variant: 'info', autoHideDuration: 6000 })
       const result = await algorand.send.payment({
         signer: transactionSigner,
         sender: activeAddress,
         receiver: receiverAddress,
         amount: algo(1),
       })
-      enqueueSnackbar(`Transaction sent: ${result.txIds[0]}`, { variant: 'success' })
+      enqueueSnackbar(`✅ Transaction sent: ${result.txIds[0]}`, { variant: 'success' })
       setReceiverAddress('')
     } catch (e) {
-      enqueueSnackbar('Failed to send transaction', { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     }
 
     setLoading(false)

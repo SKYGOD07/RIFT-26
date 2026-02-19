@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { CounterClient } from '../contracts/Counter'
 import { getAlgodConfigFromViteEnvironment, getIndexerConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
 import { AlgorandClient } from '@algorandfoundation/algokit-utils'
+import { handleTxnError } from '../utils/handleTxnError'
 
 interface AppCallsInterface {
   openModal: boolean
@@ -101,6 +102,8 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
         defaultSigner: TransactionSigner,
       })
 
+      enqueueSnackbar('Please check your phone to sign the transaction!', { variant: 'info', autoHideDuration: 6000 })
+
       // Increment the counter
       await counterClient.send.incrCounter({ args: [], sender: activeAddress ?? undefined })
 
@@ -108,11 +111,11 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
       const count = await fetchCount(appId)
       setCurrentCount(count)
 
-      enqueueSnackbar(`Counter incremented! New count: ${count}`, {
+      enqueueSnackbar(`✅ Counter incremented! New count: ${count}`, {
         variant: 'success'
       })
     } catch (e) {
-      enqueueSnackbar(`Error incrementing counter: ${(e as Error).message}`, { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setLoading(false)
     }

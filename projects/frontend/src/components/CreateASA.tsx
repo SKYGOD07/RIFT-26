@@ -3,6 +3,7 @@ import { useWallet } from '@txnlab/use-wallet-react'
 import { useSnackbar } from 'notistack'
 import { useMemo, useState } from 'react'
 import { getAlgodConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import { handleTxnError } from '../utils/handleTxnError'
 
 interface CreateASAProps {
   openModal: boolean
@@ -29,6 +30,7 @@ const CreateASA = ({ openModal, closeModal }: CreateASAProps) => {
     if (!activeAddress) return enqueueSnackbar('Connect a wallet first', { variant: 'error' })
     setLoading(true)
     try {
+      enqueueSnackbar('Please check your phone to sign the transaction!', { variant: 'info', autoHideDuration: 6000 })
       const result = await algorand.send.assetCreate({
         sender: activeAddress,
         total: BigInt(total),
@@ -41,10 +43,10 @@ const CreateASA = ({ openModal, closeModal }: CreateASAProps) => {
         clawback: activeAddress,
         defaultFrozen: false,
       })
-      enqueueSnackbar(`ASA created. ID: ${result.assetId}`, { variant: 'success' })
+      enqueueSnackbar(`🎉 ASA created! ID: ${result.assetId}`, { variant: 'success', autoHideDuration: 10000 })
       closeModal()
     } catch (e) {
-      enqueueSnackbar((e as Error).message, { variant: 'error' })
+      handleTxnError(e, enqueueSnackbar)
     } finally {
       setLoading(false)
     }
@@ -61,7 +63,9 @@ const CreateASA = ({ openModal, closeModal }: CreateASAProps) => {
           <input className="input input-bordered" placeholder="Total (base units)" value={total} onChange={(e) => setTotal(e.target.value)} />
         </div>
         <div className="modal-action">
-          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onCreate} disabled={loading}>Create</button>
+          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onCreate} disabled={loading}>
+            {loading ? 'Check Phone...' : 'Create'}
+          </button>
           <button className="btn" onClick={closeModal} disabled={loading}>Close</button>
         </div>
       </form>
