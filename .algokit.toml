@@ -6,4 +6,4 @@ type = 'workspace'
 projects_root_path = 'projects'
 
 [project.run]
-build = ['OnChain-Counter-contracts', 'OnChain-Counter-frontend']
+build = ['contracts', 'frontend']
