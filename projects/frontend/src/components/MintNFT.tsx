@@ -3,7 +3,6 @@ import { useWallet } from '@txnlab/use-wallet-react'
 import { useSnackbar } from 'notistack'
 import { useMemo, useState } from 'react'
 import { getAlgodConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
-import { ipfsHttpUrl, pinFileToIPFS, pinJSONToIPFS } from '../utils/pinata'
 
 interface MintNFTProps {
   openModal: boolean
@@ -25,11 +24,7 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
     return client
   }, [transactionSigner])
 
-  async function sha256Hex(data: Uint8Array): Promise<string> {
-    const digest = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(digest))
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-  }
+  const hasPinata = !!import.meta.env.VITE_PINATA_JWT
 
   const onMint = async () => {
     if (!activeAddress) return enqueueSnackbar('Connect a wallet first', { variant: 'error' })
@@ -37,32 +32,21 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
 
     setLoading(true)
     try {
-      // 1) Upload image
-      const filePin = await pinFileToIPFS(file)
-      const imageUrl = ipfsHttpUrl(filePin.IpfsHash)
+      let assetUrl = `https://smareet.vercel.app#arc3`
 
-      // 2) Create metadata
-      const metadata = {
-        name,
-        description,
-        image: imageUrl,
-        image_mimetype: file.type || 'image/png',
-        external_url: imageUrl,
-        properties: {
-          simple_property: 'Dashing Item',
-        },
+      // If Pinata is configured, upload to IPFS
+      if (hasPinata) {
+        const { pinFileToIPFS, pinJSONToIPFS, ipfsHttpUrl } = await import('../utils/pinata')
+        const filePin = await pinFileToIPFS(file)
+        const imageUrl = ipfsHttpUrl(filePin.IpfsHash)
+        const metadata = { name, description, image: imageUrl, image_mimetype: file.type || 'image/png' }
+        const jsonPin = await pinJSONToIPFS(metadata)
+        assetUrl = `${ipfsHttpUrl(jsonPin.IpfsHash)}#arc3`
       }
 
-      // 3) Upload metadata
-      const jsonPin = await pinJSONToIPFS(metadata)
-      const metadataUrl = `${ipfsHttpUrl(jsonPin.IpfsHash)}#arc3`
+      enqueueSnackbar('Please check your phone to sign the transaction!', { variant: 'info', autoHideDuration: 6000 })
 
-      // 4) ARC-3 metadata hash (sha256 of metadata JSON bytes)
-      const metaBytes = new TextEncoder().encode(JSON.stringify(metadata))
-      const metaHex = await sha256Hex(metaBytes)
-      const metadataHash = new Uint8Array(metaHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)))
-
-      // 5) Create ASA (NFT)
+      // Create ASA (NFT) on-chain
       const result = await algorand.send.assetCreate({
         sender: activeAddress,
         total: 1n,
@@ -73,15 +57,27 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
         reserve: activeAddress,
         freeze: activeAddress,
         clawback: activeAddress,
-        url: metadataUrl,
-        metadataHash,
+        url: assetUrl,
         defaultFrozen: false,
       })
 
-      enqueueSnackbar(`NFT minted. ASA ID: ${result.assetId}`, { variant: 'success' })
+      enqueueSnackbar(`🎉 NFT minted! ASA ID: ${result.assetId}`, { variant: 'success', autoHideDuration: 10000 })
       closeModal()
     } catch (e) {
-      enqueueSnackbar((e as Error).message, { variant: 'error' })
+      const msg = (e as Error).message || ''
+      if (msg.toLowerCase().includes('network mismatch') || msg.includes('4100')) {
+        enqueueSnackbar('⚠️ Network Mismatch! Open Pera Wallet → Settings → Developer Settings → Node Settings → Select "Testnet"', {
+          variant: 'error',
+          autoHideDuration: 10000,
+        })
+      } else if (msg.toLowerCase().includes('overspend')) {
+        enqueueSnackbar('💸 Insufficient funds! Get free Testnet ALGO from the faucet first.', {
+          variant: 'error',
+          autoHideDuration: 8000,
+        })
+      } else {
+        enqueueSnackbar(msg, { variant: 'error' })
+      }
     } finally {
       setLoading(false)
     }
@@ -91,13 +87,20 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
     <dialog id="mint_nft_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box">
         <h3 className="font-bold text-2xl mb-4">Mint NFT (ARC-18)</h3>
+        {!hasPinata && (
+          <div className="alert alert-info mb-3 text-sm">
+            <span>📌 IPFS not configured. NFT will be minted on-chain without image hosting.</span>
+          </div>
+        )}
         <div className="flex flex-col gap-3">
           <input className="input input-bordered" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
           <input className="input input-bordered" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
           <input className="file-input file-input-bordered" type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
         </div>
         <div className="modal-action">
-          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onMint} disabled={loading}>Mint</button>
+          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onMint} disabled={loading}>
+            {loading ? 'Check Phone...' : 'Mint'}
+          </button>
           <button className="btn" onClick={closeModal} disabled={loading}>Close</button>
         </div>
       </form>
@@ -106,4 +109,5 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
 }
 
 export default MintNFT
+
 
