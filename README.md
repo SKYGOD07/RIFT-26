@@ -10,6 +10,7 @@ This guide helps non‑technical founders and developers quickly prototype and t
   - Asset Create: mint fungible tokens (ASAs)
   - NFT Mint: upload to IPFS and mint ARC NFTs
   - Payments: send ALGO and ASA (e.g., USDC)
+  - **[NEW] Event Ticketing**: Mint VIP tickets with resale price controls (Logic in `smart_contracts/ticketing`)
 
 [Base template repo](https://github.com/marotipatre/Hackseries-2-QuickStart-template)
 
