@@ -25,13 +25,27 @@ const SendAlgo = ({ openModal, closeModal }: SendAlgoProps) => {
   }, [transactionSigner])
 
   const onSend = async () => {
-    if (!activeAddress) return enqueueSnackbar('Connect a wallet first', { variant: 'error' })
+    if (!activeAddress) {
+      enqueueSnackbar('Connect a wallet first', { variant: 'error' })
+      return
+    }
+    if (!to || to.length !== 58) {
+      enqueueSnackbar('Invalid address (must be 58 characters)', { variant: 'error' })
+      return
+    }
     const microAlgos = BigInt(Math.floor(Number(amount) * 1e6))
-    if (!to || microAlgos <= 0n) return enqueueSnackbar('Enter valid address and amount', { variant: 'error' })
+    if (microAlgos <= 0n) {
+      enqueueSnackbar('Enter a valid amount', { variant: 'error' })
+      return
+    }
     setLoading(true)
     try {
+      console.log('Sending Payment...', { from: activeAddress, to, microAlgos })
+      enqueueSnackbar('Please check your phone to sign the transaction!', { variant: 'info', autoHideDuration: 6000 })
+
       await algorand.send.payment({ sender: activeAddress, receiver: to, amount: algokit.microAlgos(microAlgos) })
-      enqueueSnackbar('Payment sent', { variant: 'success' })
+      console.log('Payment successful!')
+      enqueueSnackbar('Payment sent successfully!', { variant: 'success' })
       closeModal()
     } catch (e) {
       enqueueSnackbar((e as Error).message, { variant: 'error' })
@@ -49,7 +63,9 @@ const SendAlgo = ({ openModal, closeModal }: SendAlgoProps) => {
           <input className="input input-bordered" placeholder="Amount (ALGO)" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <div className="modal-action">
-          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onSend} disabled={loading}>Send</button>
+          <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onSend} disabled={loading}>
+            {loading ? 'Check Phone...' : 'Send'}
+          </button>
           <button className="btn" onClick={closeModal} disabled={loading}>Close</button>
         </div>
       </form>
