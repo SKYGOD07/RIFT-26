@@ -4,45 +4,36 @@ from algokit_utils import (
     AlgorandClient,
     OnSchemaBreak,
     OnUpdate,
-    PaymentTxnParams,
+    AlgoAmount,
     TransactionParameters,
 )
 from algosdk.atomic_transaction_composer import TransactionWithSigner
+from algosdk.transaction import PaymentTxn
 from smart_contracts.artifacts.ticketing.event_ticketing_client import (
+    EventTicketingFactory,
     EventTicketingClient,
 )
 
 @pytest.fixture(scope="module")
 def app_client(algorand_client: AlgorandClient) -> EventTicketingClient:
     """Deploy the contract and return the client."""
-    creator = algorand_client.account.random()
-    # Fund creator
-    algorand_client.send.payment(
-        PaymentTxnParams(
-            sender=algorand_client.account.localnet_app_account().address,
-            receiver=creator.address,
-            amount=10_000_000,
-        )
+    creator = algorand_client.account.from_environment("CREATOR", fund_with=AlgoAmount.from_algo(1000))
+    
+    factory = algorand_client.client.get_typed_app_factory(
+        EventTicketingFactory, 
+        default_sender=creator.address
     )
     
-    client = EventTicketingClient(
-        algod_client=algorand_client.client.algod,
-        creator=creator,
-        indexer_client=algorand_client.client.indexer,
-    )
-    
-    client.deploy(
-        on_schema_break=OnSchemaBreak.Append,
-        on_update=OnUpdate.Append,
+    client, _ = factory.deploy(
+        on_schema_break="append",
+        on_update="append",
     )
     
     # Fund the app account for inner transactions (opt-ins, etc.)
     algorand_client.send.payment(
-        PaymentTxnParams(
-            sender=creator.address,
-            receiver=client.app_address,
-            amount=1_000_000,
-        )
+        sender=creator.address,
+        receiver=client.app_address,
+        amount=AlgoAmount.from_algo(1)
     )
     
     return client
@@ -55,37 +46,16 @@ def test_scalper_attack(app_client: EventTicketingClient, algorand_client: Algor
     ticket_price = 100
     seat_number = "VIP-1"
     
-    mint_result = app_client.mint_ticket(
-        ticket_price=ticket_price,
-        seat_number=seat_number,
+    mint_result = app_client.send.mint_ticket(
+        args=(ticket_price, seat_number)
     )
-    asset_id = mint_result.return_value
+    asset_id = mint_result.abi_return
     
     print(f"Minted asset {asset_id} with max resale price {ticket_price}")
 
-    # Opt-in scalper and fan to the asset - handled automatically by atomic_transaction_composer in Transfer? 
-    # No, usually need explicit opt-in for ASAs unless using specific ARC standards that allow implicitly.
-    # Standard ASA requires opt-in.
+    scalper = algorand_client.account.from_environment("SCALPER", fund_with=AlgoAmount.from_algo(100))
+    fan = algorand_client.account.from_environment("FAN", fund_with=AlgoAmount.from_algo(100))
     
-    scalper = algorand_client.account.random()
-    fan = algorand_client.account.random()
-    
-    # Fund scalper and fan
-    algorand_client.send.payment(
-        PaymentTxnParams(
-            sender=algorand_client.account.localnet_app_account().address,
-            receiver=scalper.address,
-            amount=10_000_000,
-        )
-    )
-    algorand_client.send.payment(
-        PaymentTxnParams(
-            sender=algorand_client.account.localnet_app_account().address,
-            receiver=fan.address,
-            amount=10_000_000,
-        )
-    )
-
     # Opt-in to asset
     algorand_client.send.asset_opt_in(
         sender=scalper.address,
@@ -98,30 +68,12 @@ def test_scalper_attack(app_client: EventTicketingClient, algorand_client: Algor
         signer=fan.signer
     )
 
-    # Transfer asset from creator to scalper (this should work, initial sale)
-    # But wait, our transfer_ticket method logic is:
-    # assert payment.amount <= self.max_resale_price
-    # assert payment.receiver == Global.current_application_address
-    # itxn.AssetTransfer(xfer_asset=asset, asset_receiver=Txn.sender, asset_amount=1)
-    
-    # So the "transfer_ticket" method IS the purchase method from the contract to the user.
-    # It seems the logic I wrote in contract.py handles the "Primary Sale" or "Secondary Sale" 
-    # where the contract is the seller/broker.
-    
-    # Let's test the Contract's enforcement.
-    
     # SCENARIO 1: Scalper tries to buy/claim the ticket paying MORE than max_price
-    # (Maybe scalper thinks paying more gets them priority? or this simulates a secondary market wrapper?)
-    # In this specific contract logic:
-    # `transfer_ticket` exchanges Payment -> Asset.
-    
     print("Scalper trying to buy for 500 (limit 100)...")
     
-    import algosdk
-    
     # Construct payment transaction
-    sp = app_client.algod_client.suggested_params()
-    payment_scalper = algosdk.transaction.PaymentTxn(
+    sp = app_client.algorand.client.algod.suggested_params()
+    payment_scalper = PaymentTxn(
         sender=scalper.address,
         sp=sp,
         receiver=app_client.app_address,
@@ -131,36 +83,34 @@ def test_scalper_attack(app_client: EventTicketingClient, algorand_client: Algor
     
     # Expect failure
     with pytest.raises(Exception, match="Price exceeds max resale price"):
-        app_client.transfer_ticket(
-            payment=TransactionWithSigner(payment_scalper, scalper.signer),
-            asset=asset_id,
-            transaction_parameters=algokit_utils.TransactionParameters(
-                sender=scalper.address,
-                signer=scalper.signer,
-            )
+        app_client.send.transfer_ticket(
+            args=(
+                TransactionWithSigner(payment_scalper, scalper.signer),
+                asset_id
+            ),
+            send_params={"sender": scalper.address, "signer": scalper.signer}
         )
     print("Scalper attack REJECTED as expected!")
 
     # SCENARIO 2: Fan buys at face value
     print("Fan buying for 100...")
-    payment_fan = algosdk.transaction.PaymentTxn(
+    payment_fan = PaymentTxn(
         sender=fan.address,
         sp=sp,
         receiver=app_client.app_address,
         amt=100
     )
     
-    app_client.transfer_ticket(
-        payment=TransactionWithSigner(payment_fan, fan.signer),
-        asset=asset_id,
-        transaction_parameters=algokit_utils.TransactionParameters(
-            sender=fan.address,
-            signer=fan.signer,
-        )
+    app_client.send.transfer_ticket(
+        args=(
+            TransactionWithSigner(payment_fan, fan.signer),
+            asset_id
+        ),
+        send_params={"sender": fan.address, "signer": fan.signer}
     )
     print("Fan purchase ACCEPTED!")
     
     # Verify ownership
-    account_info = app_client.algod_client.account_asset_info(fan.address, asset_id)
+    account_info = app_client.algorand.client.algod.account_asset_info(fan.address, asset_id)
     assert account_info['asset-holding']['amount'] == 1
     print("Fan owns the ticket.")

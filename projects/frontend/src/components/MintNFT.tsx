@@ -90,7 +90,7 @@ const MintNFT = ({ openModal, closeModal }: MintNFTProps) => {
   return (
     <dialog id="mint_nft_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box">
-        <h3 className="font-bold text-2xl mb-4">Mint NFT (ARC-3)</h3>
+        <h3 className="font-bold text-2xl mb-4">Mint NFT (ARC-18)</h3>
         <div className="flex flex-col gap-3">
           <input className="input input-bordered" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
           <input className="input input-bordered" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />

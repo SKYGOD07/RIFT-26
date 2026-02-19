@@ -25,8 +25,8 @@ const features = [
   },
   {
     icon: '🎨',
-    title: 'Mint NFT (ARC-3)',
-    desc: 'Seamlessly upload your assets to IPFS via Pinata and mint standard ARC-3 NFTs directly from the interface.',
+    title: 'Mint NFT (ARC-18)',
+    desc: 'Seamlessly upload your assets to IPFS via Pinata and mint standard ARC-18 NFTs directly from the interface.',
     key: 'mintNft',
   },
   {

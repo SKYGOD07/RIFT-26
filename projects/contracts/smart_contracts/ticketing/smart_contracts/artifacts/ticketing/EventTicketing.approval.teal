@@ -1,0 +1,216 @@
+#pragma version 10
+#pragma typetrack false
+
+// algopy.arc4.ARC4Contract.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "max_resale_price"
+    // smart_contracts/ticketing/contract.py:3
+    // class EventTicketing(ARC4Contract):
+    txn NumAppArgs
+    bz main_bare_routing@7
+    pushbytess 0x3311de72 0xca2eea0b // method "mint_ticket(uint64,string)uint64", method "transfer_ticket(pay,asset)void"
+    txna ApplicationArgs 0
+    match main_mint_ticket_route@3 main_transfer_ticket_route@4
+
+main_after_if_else@11:
+    // smart_contracts/ticketing/contract.py:3
+    // class EventTicketing(ARC4Contract):
+    intc_1 // 0
+    return
+
+main_transfer_ticket_route@4:
+    // smart_contracts/ticketing/contract.py:22
+    // @arc4.abimethod
+    txn OnCompletion
+    !
+    assert // OnCompletion is not NoOp
+    txn ApplicationID
+    assert // can only call when not creating
+    // smart_contracts/ticketing/contract.py:3
+    // class EventTicketing(ARC4Contract):
+    txn GroupIndex
+    intc_0 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_0 // pay
+    ==
+    assert // transaction type is pay
+    txna ApplicationArgs 1
+    btoi
+    txnas Assets
+    // smart_contracts/ticketing/contract.py:22
+    // @arc4.abimethod
+    callsub transfer_ticket
+    intc_0 // 1
+    return
+
+main_mint_ticket_route@3:
+    // smart_contracts/ticketing/contract.py:6
+    // @arc4.abimethod
+    txn OnCompletion
+    !
+    assert // OnCompletion is not NoOp
+    txn ApplicationID
+    assert // can only call when not creating
+    // smart_contracts/ticketing/contract.py:3
+    // class EventTicketing(ARC4Contract):
+    txna ApplicationArgs 1
+    btoi
+    txna ApplicationArgs 2
+    extract 2 0
+    // smart_contracts/ticketing/contract.py:6
+    // @arc4.abimethod
+    callsub mint_ticket
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bare_routing@7:
+    // smart_contracts/ticketing/contract.py:3
+    // class EventTicketing(ARC4Contract):
+    txn OnCompletion
+    bnz main_after_if_else@11
+    txn ApplicationID
+    !
+    assert // can only call when creating
+    intc_0 // 1
+    return
+
+
+// smart_contracts.ticketing.contract.EventTicketing.mint_ticket(ticket_price: uint64, seat_number: bytes) -> uint64:
+mint_ticket:
+    // smart_contracts/ticketing/contract.py:6-7
+    // @arc4.abimethod
+    // def mint_ticket(self, ticket_price: UInt64, seat_number: String) -> Asset:
+    proto 2 1
+    // smart_contracts/ticketing/contract.py:8
+    // self.max_resale_price = ticket_price
+    bytec_0 // "max_resale_price"
+    frame_dig -2
+    app_global_put
+    // smart_contracts/ticketing/contract.py:10-20
+    // return itxn.AssetConfig(
+    //     total=1,
+    //     decimals=0,
+    //     default_frozen=False,
+    //     unit_name="TICKET",
+    //     asset_name=seat_number,
+    //     manager=Global.current_application_address,
+    //     reserve=Global.current_application_address,
+    //     freeze=Global.current_application_address,
+    //     clawback=Global.current_application_address,
+    // ).submit().created_asset
+    itxn_begin
+    // smart_contracts/ticketing/contract.py:16
+    // manager=Global.current_application_address,
+    global CurrentApplicationAddress
+    // smart_contracts/ticketing/contract.py:17-19
+    // reserve=Global.current_application_address,
+    // freeze=Global.current_application_address,
+    // clawback=Global.current_application_address,
+    dupn 3
+    itxn_field ConfigAssetClawback
+    itxn_field ConfigAssetFreeze
+    itxn_field ConfigAssetReserve
+    itxn_field ConfigAssetManager
+    frame_dig -1
+    itxn_field ConfigAssetName
+    // smart_contracts/ticketing/contract.py:14
+    // unit_name="TICKET",
+    pushbytes "TICKET"
+    itxn_field ConfigAssetUnitName
+    // smart_contracts/ticketing/contract.py:13
+    // default_frozen=False,
+    intc_1 // 0
+    itxn_field ConfigAssetDefaultFrozen
+    // smart_contracts/ticketing/contract.py:12
+    // decimals=0,
+    intc_1 // 0
+    itxn_field ConfigAssetDecimals
+    // smart_contracts/ticketing/contract.py:11
+    // total=1,
+    intc_0 // 1
+    itxn_field ConfigAssetTotal
+    // smart_contracts/ticketing/contract.py:10
+    // return itxn.AssetConfig(
+    pushint 3 // acfg
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    // smart_contracts/ticketing/contract.py:10-20
+    // return itxn.AssetConfig(
+    //     total=1,
+    //     decimals=0,
+    //     default_frozen=False,
+    //     unit_name="TICKET",
+    //     asset_name=seat_number,
+    //     manager=Global.current_application_address,
+    //     reserve=Global.current_application_address,
+    //     freeze=Global.current_application_address,
+    //     clawback=Global.current_application_address,
+    // ).submit().created_asset
+    itxn_submit
+    itxn CreatedAssetID
+    retsub
+
+
+// smart_contracts.ticketing.contract.EventTicketing.transfer_ticket(payment: uint64, asset: uint64) -> void:
+transfer_ticket:
+    // smart_contracts/ticketing/contract.py:22-23
+    // @arc4.abimethod
+    // def transfer_ticket(self, payment: gtxn.PaymentTransaction, asset: Asset) -> None:
+    proto 2 0
+    // smart_contracts/ticketing/contract.py:24
+    // assert payment.amount <= self.max_resale_price, "Price exceeds max resale price"
+    frame_dig -2
+    gtxns Amount
+    intc_1 // 0
+    bytec_0 // "max_resale_price"
+    app_global_get_ex
+    assert // check self.max_resale_price exists
+    <=
+    assert // Price exceeds max resale price
+    // smart_contracts/ticketing/contract.py:25
+    // assert payment.receiver == Global.current_application_address, "Payment must be to the contract"
+    frame_dig -2
+    gtxns Receiver
+    global CurrentApplicationAddress
+    ==
+    assert // Payment must be to the contract
+    // smart_contracts/ticketing/contract.py:27-31
+    // itxn.AssetTransfer(
+    //     xfer_asset=asset,
+    //     asset_receiver=Txn.sender,
+    //     asset_amount=1,
+    // ).submit()
+    itxn_begin
+    // smart_contracts/ticketing/contract.py:29
+    // asset_receiver=Txn.sender,
+    txn Sender
+    // smart_contracts/ticketing/contract.py:30
+    // asset_amount=1,
+    intc_0 // 1
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    frame_dig -1
+    itxn_field XferAsset
+    // smart_contracts/ticketing/contract.py:27
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    // smart_contracts/ticketing/contract.py:27-31
+    // itxn.AssetTransfer(
+    //     xfer_asset=asset,
+    //     asset_receiver=Txn.sender,
+    //     asset_amount=1,
+    // ).submit()
+    itxn_submit
+    retsub
