@@ -127,14 +127,17 @@ async def mint_ticket(req: MintTicketRequest, db: AsyncSession = Depends(get_db)
 async def list_tickets(
     event_id: int | None = None,
     status: str | None = None,
+    owner: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """List tickets, optionally filtered by event_id or status."""
+    """List tickets, optionally filtered by event_id, status, or owner wallet."""
     query = select(Ticket).order_by(Ticket.minted_at.desc())
     if event_id:
         query = query.where(Ticket.event_id == event_id)
     if status:
         query = query.where(Ticket.status == status)
+    if owner:
+        query = query.where(Ticket.current_owner_wallet == owner)
     result = await db.execute(query)
     return result.scalars().all()
 

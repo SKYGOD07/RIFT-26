@@ -10,6 +10,7 @@ import AssetOptIn from './components/AssetOptIn'
 import Bank from './components/Bank'
 import LoadingScreen from './components/LoadingScreen'
 import ThemeToggle from './components/ThemeToggle'
+import MyTickets from './components/MyTickets'
 
 interface HomeProps { }
 
@@ -52,6 +53,12 @@ const features = [
     title: 'Decentralized Bank',
     desc: 'Deposit and withdraw ALGOs from a secure, non-custodial bank smart contract. Track your transaction history on-chain.',
     key: 'bank',
+  },
+  {
+    icon: '🎟️',
+    title: 'My Tickets',
+    desc: 'View your owned tickets, check seat numbers, and manage your assets directly from your wallet.',
+    key: 'myTickets',
   },
 ]
 
@@ -281,6 +288,7 @@ const Home: React.FC<HomeProps> = () => {
   const [createAsaModal, setCreateAsaModal] = useState(false)
   const [assetOptInModal, setAssetOptInModal] = useState(false)
   const [bankModal, setBankModal] = useState(false)
+  const [myTicketsModal, setMyTicketsModal] = useState(false)
   const [showLoading, setShowLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [navScrolled, setNavScrolled] = useState(false)
@@ -316,6 +324,7 @@ const Home: React.FC<HomeProps> = () => {
       case 'assetOptIn': setAssetOptInModal(true); break
       case 'appCalls': setAppCallsDemoModal(true); break
       case 'bank': setBankModal(true); break
+      case 'myTickets': setMyTicketsModal(true); break
     }
   }
 
@@ -418,6 +427,7 @@ const Home: React.FC<HomeProps> = () => {
       <CreateASA openModal={createAsaModal} closeModal={() => setCreateAsaModal(false)} />
       <AssetOptIn openModal={assetOptInModal} closeModal={() => setAssetOptInModal(false)} />
       <Bank openModal={bankModal} closeModal={() => setBankModal(false)} />
+      <MyTickets openModal={myTicketsModal} closeModal={() => setMyTicketsModal(false)} />
     </>
   )
 }
