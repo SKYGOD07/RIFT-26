@@ -13,7 +13,7 @@ import ThemeToggle from './components/ThemeToggle'
 
 interface HomeProps { }
 
-const TOTAL_FRAMES = 192
+const TOTAL_FRAMES = 240
 
 // Feature data
 const features = [
@@ -102,7 +102,7 @@ const ScrollFrameAnimation = () => {
 
     for (let i = 0; i < SAMPLED_COUNT; i++) {
       const frameIdx = i * FRAME_STEP + 1
-      const src = `/frames/${String(frameIdx).padStart(4, '0')}.jpg`
+      const src = `/frames/${String(frameIdx).padStart(4, '0')}.png`
       fetch(src)
         .then(r => r.blob())
         .then(blob => createImageBitmap(blob))
