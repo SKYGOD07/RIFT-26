@@ -48,7 +48,20 @@ const SendAlgo = ({ openModal, closeModal }: SendAlgoProps) => {
       enqueueSnackbar('Payment sent successfully!', { variant: 'success' })
       closeModal()
     } catch (e) {
-      enqueueSnackbar((e as Error).message, { variant: 'error' })
+      const msg = (e as Error).message || ''
+      if (msg.toLowerCase().includes('network mismatch') || msg.includes('4100')) {
+        enqueueSnackbar('⚠️ Network Mismatch! Open Pera Wallet → Settings → Developer Settings → Node Settings → Select "Testnet"', {
+          variant: 'error',
+          autoHideDuration: 10000,
+        })
+      } else if (msg.toLowerCase().includes('overspend')) {
+        enqueueSnackbar('💸 Insufficient funds! Get free Testnet ALGO from the faucet first.', {
+          variant: 'error',
+          autoHideDuration: 8000,
+        })
+      } else {
+        enqueueSnackbar(msg, { variant: 'error' })
+      }
     } finally {
       setLoading(false)
     }
