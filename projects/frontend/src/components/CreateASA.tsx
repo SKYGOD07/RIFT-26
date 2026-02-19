@@ -55,12 +55,13 @@ const CreateASA = ({ openModal, closeModal }: CreateASAProps) => {
   return (
     <dialog id="create_asa_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box">
-        <h3 className="font-bold text-2xl mb-4">Create Fungible Token (ASA)</h3>
+        <h3 className="font-bold text-2xl mb-1">Create Fungible Token (ASA)</h3>
+        <p className="text-sm opacity-60 mb-4">Create a new Algorand Standard Asset on Testnet.</p>
         <div className="flex flex-col gap-3">
-          <input className="input input-bordered" placeholder="Asset name" value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="input input-bordered" placeholder="Unit name" value={unit} onChange={(e) => setUnit(e.target.value)} />
-          <input className="input input-bordered" placeholder="Decimals" value={decimals} onChange={(e) => setDecimals(e.target.value)} />
-          <input className="input input-bordered" placeholder="Total (base units)" value={total} onChange={(e) => setTotal(e.target.value)} />
+          <input className="input input-bordered" placeholder="e.g. MyToken" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input input-bordered" placeholder="e.g. MTK (max 8 chars)" value={unit} onChange={(e) => setUnit(e.target.value)} />
+          <input className="input input-bordered" placeholder="e.g. 6 (decimal places)" value={decimals} onChange={(e) => setDecimals(e.target.value)} />
+          <input className="input input-bordered" placeholder="e.g. 1000000 (total supply)" value={total} onChange={(e) => setTotal(e.target.value)} />
         </div>
         <div className="modal-action">
           <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onCreate} disabled={loading}>

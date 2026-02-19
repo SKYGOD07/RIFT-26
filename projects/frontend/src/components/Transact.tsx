@@ -47,27 +47,29 @@ const Transact = ({ openModal, setModalState }: TransactInterface) => {
   }
 
   return (
-    <dialog id="transact_modal" className={`modal ${openModal ? 'modal-open' : ''} bg-slate-200`}>
+    <dialog id="transact_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box">
         <h3 className="font-bold text-lg">Send payment transaction</h3>
+        <p className="text-sm opacity-60 mt-1">Send 1 ALGO to any Algorand address.</p>
         <br />
         <input
           type="text"
           data-test-id="receiver-address"
-          placeholder="Provide wallet address"
+          placeholder="Paste receiver wallet address (58 characters)"
           className="input input-bordered w-full"
           value={receiverAddress}
           onChange={(e) => {
             setReceiverAddress(e.target.value)
           }}
         />
+        <p className="text-xs opacity-40 mt-1">Address must be exactly 58 characters (e.g. F2FO26EDZ...)</p>
         <div className="modal-action ">
           <button className="btn" onClick={() => setModalState(!openModal)}>
             Close
           </button>
           <button
             data-test-id="send-algo"
-            className={`btn ${receiverAddress.length === 58 ? '' : 'btn-disabled'} lo`}
+            className={`btn ${receiverAddress.length === 58 ? 'btn-primary' : 'btn-disabled'}`}
             onClick={handleSubmitAlgo}
           >
             {loading ? <span className="loading loading-spinner" /> : 'Send 1 Algo'}

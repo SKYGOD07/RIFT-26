@@ -122,9 +122,10 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
   }
 
   return (
-    <dialog id="appcalls_modal" className={`modal ${openModal ? 'modal-open' : ''} bg-slate-200`}>
+    <dialog id="appcalls_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box">
         <h3 className="font-bold text-lg">Counter Contract</h3>
+        <p className="text-sm opacity-60 mt-1">Interact with the on-chain counter smart contract (App ID: {appId}).</p>
         <br />
 
         <div className="flex flex-col gap-4">
@@ -135,30 +136,15 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
             </div>
           )}
 
-          {/*
-          <div className="flex flex-col gap-2">
-            <button 
-              className={`btn btn-primary ${deploying ? 'loading' : ''}`}
-              onClick={deployContract}
-              disabled={deploying || loading}
-            >
-              {deploying ? 'Deploying...' : 'Deploy Contract'}
-            </button>
-            <p className="text-sm">Run this once to deploy the contract</p>
-          </div>
-          
-          <div className="divider">OR</div>
-          */}
-
           <div className="flex flex-col gap-2">
             <button
               className={`btn btn-secondary ${loading ? 'loading' : ''}`}
               onClick={incrementCounter}
               disabled={loading || !appId}
             >
-              {loading ? 'Processing...' : 'Increment Counter'}
+              {loading ? 'Check Phone...' : 'Increment Counter'}
             </button>
-            <p className="text-sm">Requires deployed contract</p>
+            <p className="text-sm opacity-50">Each click adds 1 to the on-chain counter.</p>
           </div>
 
           <div className="modal-action">

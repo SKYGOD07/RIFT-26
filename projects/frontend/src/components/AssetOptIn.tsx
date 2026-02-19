@@ -43,9 +43,10 @@ const AssetOptIn = ({ openModal, closeModal }: AssetOptInProps) => {
   return (
     <dialog id="asset_optin_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box">
-        <h3 className="font-bold text-2xl mb-4">Asset Opt-In</h3>
+        <h3 className="font-bold text-2xl mb-1">Asset Opt-In</h3>
+        <p className="text-sm opacity-60 mb-4">Opt-in to receive a specific token. You need the ASA ID (shown when a token is created).</p>
         <div className="flex flex-col gap-3">
-          <input className="input input-bordered" placeholder="ASA ID" value={asaId} onChange={(e) => setAsaId(e.target.value)} />
+          <input className="input input-bordered" placeholder="e.g. 10458941" value={asaId} onChange={(e) => setAsaId(e.target.value)} />
         </div>
         <div className="modal-action">
           <button className={`btn btn-primary ${loading ? 'loading' : ''}`} onClick={onOptIn} disabled={loading}>

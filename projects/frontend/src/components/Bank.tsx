@@ -288,53 +288,59 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
   }
 
   return (
-    <dialog id="bank_modal" className={`modal ${openModal ? 'modal-open' : ''} bg-slate-200`}>
+    <dialog id="bank_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
       <form method="dialog" className="modal-box max-w-3xl">
         <h3 className="font-bold text-lg">Bank Contract</h3>
-        <div className="mt-2 flex flex-col gap-4">
+        <p className="text-sm opacity-60 mt-1">Deploy a bank smart contract or interact with an existing one.</p>
+        <div className="mt-4 flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-sm">Application ID</label>
-            <input className="input input-bordered" type="number" value={appId} onChange={(e) => setAppId(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Enter deployed Bank App ID" />
+            <label className="text-sm font-medium">Application ID</label>
+            <input className="input input-bordered" type="number" value={appId} onChange={(e) => setAppId(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 755791847" />
             {appAddress && (
               <div className="alert alert-info text-xs break-all">App Address: {appAddress}</div>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2 p-4 rounded-lg bg-white">
+            <div className="flex flex-col gap-2 p-4 rounded-lg bg-base-200 border border-base-300">
               <div className="font-semibold">Deploy (optional)</div>
-              <button className={`btn btn-accent ${deploying ? 'loading' : ''}`} disabled={deploying || !activeAddress} onClick={(e) => { e.preventDefault(); void deployContract() }}>Deploy Bank</button>
-              <p className="text-xs text-gray-500">Or enter an existing App ID above.</p>
+              <button className={`btn btn-accent ${deploying ? 'loading' : ''}`} disabled={deploying || !activeAddress} onClick={(e) => { e.preventDefault(); void deployContract() }}>
+                {deploying ? 'Deploying...' : 'Deploy Bank'}
+              </button>
+              <p className="text-xs opacity-50">Or enter an existing App ID above.</p>
             </div>
-            <div className="flex flex-col gap-2 p-4 rounded-lg bg-white">
+            <div className="flex flex-col gap-2 p-4 rounded-lg bg-base-200 border border-base-300">
               <div className="font-semibold">Deposit</div>
               <input className="input input-bordered" placeholder="Memo (optional)" value={memo} onChange={(e) => setMemo(e.target.value)} />
-              <input className="input input-bordered" placeholder="Amount (Algos)" type="number" step="0.000001" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} />
-              <button className={`btn btn-primary ${loading ? 'loading' : ''}`} disabled={loading || !activeAddress || !appId} onClick={(e) => { e.preventDefault(); void deposit() }}>Deposit</button>
+              <input className="input input-bordered" placeholder="e.g. 0.5" type="number" step="0.000001" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} />
+              <button className={`btn btn-primary ${loading ? 'loading' : ''}`} disabled={loading || !activeAddress || !appId} onClick={(e) => { e.preventDefault(); void deposit() }}>
+                {loading ? 'Check Phone...' : 'Deposit'}
+              </button>
             </div>
-            <div className="flex flex-col gap-2 p-4 rounded-lg bg-white">
+            <div className="flex flex-col gap-2 p-4 rounded-lg bg-base-200 border border-base-300">
               <div className="font-semibold">Withdraw</div>
-              <input className="input input-bordered" placeholder="Amount (Algos)" type="number" step="0.000001" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} />
-              <button className={`btn btn-secondary ${loading ? 'loading' : ''}`} disabled={loading || !activeAddress || !appId} onClick={(e) => { e.preventDefault(); void withdraw() }}>Withdraw</button>
+              <input className="input input-bordered" placeholder="e.g. 0.5" type="number" step="0.000001" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} />
+              <button className={`btn btn-secondary ${loading ? 'loading' : ''}`} disabled={loading || !activeAddress || !appId} onClick={(e) => { e.preventDefault(); void withdraw() }}>
+                {loading ? 'Check Phone...' : 'Withdraw'}
+              </button>
             </div>
           </div>
 
           <div className="divider">Statements</div>
-          <div className="max-h-56 overflow-auto bg-white rounded-lg p-2">
+          <div className="max-h-56 overflow-auto bg-base-200 rounded-lg p-2 border border-base-300">
             {statements.length === 0 ? (
-              <div className="text-sm text-gray-500">No transactions found.</div>
+              <div className="text-sm opacity-50">No transactions found.</div>
             ) : (
               <ul className="text-sm">
                 {statements.map((s) => (
-                  <li key={s.id} className="py-1 flex justify-between items-center border-b last:border-0">
-                    <span className={s.type === 'deposit' ? 'text-emerald-600' : 'text-amber-700'}>{s.type}</span>
-                    <span>round {s.round}</span>
-                    {/* <span>{s.amount} Algos</span> */}
+                  <li key={s.id} className="py-1 flex justify-between items-center border-b border-base-300 last:border-0">
+                    <span className={s.type === 'deposit' ? 'text-emerald-400' : 'text-amber-400'}>{s.type}</span>
+                    <span className="opacity-70">round {s.round}</span>
                     <a
                       href={`https://lora.algokit.io/testnet/transaction/${s.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline text-xs"
+                      className="text-blue-400 hover:text-blue-300 underline text-xs"
                     >
                       View
                     </a>
@@ -345,13 +351,13 @@ const Bank = ({ openModal, closeModal }: BankProps) => {
           </div>
 
           <div className="divider">Depositors</div>
-          <div className="max-h-56 overflow-auto bg-white rounded-lg p-2">
+          <div className="max-h-56 overflow-auto bg-base-200 rounded-lg p-2 border border-base-300">
             {depositors.length === 0 ? (
-              <div className="text-sm text-gray-500">No depositors yet.</div>
+              <div className="text-sm opacity-50">No depositors yet.</div>
             ) : (
               <ul className="text-sm">
                 {depositors.map((d) => (
-                  <li key={d.address} className="py-1 flex justify-between border-b last:border-0">
+                  <li key={d.address} className="py-1 flex justify-between border-b border-base-300 last:border-0">
                     <span className="truncate mr-2">{d.address}</span>
                     <span>{d.amount} Algos</span>
                   </li>
