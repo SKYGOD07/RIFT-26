@@ -239,13 +239,11 @@ Open **My Tickets** → view all ticket NFTs owned by your wallet → see seat n
 
 ## 👥 Team Members
 
-| Name | Role |
-|------|------|
-| **[Your Name]** | Full-Stack Developer / Smart Contract Engineer |
-| **[Team Member 2]** | _[Role]_ |
-| **[Team Member 3]** | _[Role]_ |
-
-> ⚠️ **Update this section with your actual team members before submission.**
+| Name | Role | GitHub |
+|------|------|--------|
+| **SAHIL SHARMA** | Team Leader / Full-Stack Developer | [@SKYGOD07](https://github.com/SKYGOD07) |
+| **SAHAJPREET SINGH** | Full-Stack Developer | [@SahajCodes001](https://github.com/SahajCodes001) |
+| **RZA MOHAMMED** | Smart Contract Engineer | [@RzaMohammed](https://github.com/RzaMohammed) |
 
 ---
 
